@@ -1,6 +1,8 @@
-name: CI
+name: CI Pipeline
 
-on: [push]
+on:
+  push:
+    branches: [main]
 
 jobs:
   test:
@@ -14,9 +16,35 @@ jobs:
         with:
           python-version: 3.12
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
-          pip install pytest
+          pip install pytest pytest-cov flake8
+
+      - name: Lint Python (flake8)
+        run: flake8 api worker || true
 
       - name: Run tests
-        run: pytest
+        run: pytest -v
+
+      - name: Coverage
+        run: pytest --cov=api --cov-report=xml || true
+
+      - name: Install Node (for frontend lint)
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install ESLint
+        run: npm install -g eslint || true
+
+      - name: Run frontend lint (if exists)
+        run: eslint frontend || true
+
+      - name: Docker build API
+        run: docker build api
+
+      - name: Docker build frontend
+        run: docker build frontend
+
+      - name: Docker build worker
+        run: docker build worker
