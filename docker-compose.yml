@@ -8,8 +8,13 @@ services:
       - REDIS_PORT=6379
     depends_on:
       redis:
-        condition: service_started
+        condition: service_healthy
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
 
   worker:
     build: ./worker
@@ -18,16 +23,31 @@ services:
       - REDIS_PORT=6379
     depends_on:
       redis:
-        condition: service_started
+        condition: service_healthy
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
 
   frontend:
     build: ./frontend
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
 
   redis:
     image: redis:alpine
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 networks:
   default:
